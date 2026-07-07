@@ -1,0 +1,21 @@
+# Virtual Environment
+.venv/
+
+# Environment
+.env
+
+# Python
+__pycache__/
+*.pyc
+
+# Database
+chromadb_data/
+
+# Uploads
+uploads/
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
