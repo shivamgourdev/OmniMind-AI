@@ -19,9 +19,7 @@ def register_exception_handlers(app: FastAPI):
             content={
                 "success": False,
                 "message": "Validation Error",
-                # str(exc) instead of exc.errors(): some pydantic v2 error
-                # contexts embed non-JSON-serializable objects, which broke
-                # this handler previously. Keeping the string form here.
+
                 "errors": str(exc),
             },
         )
@@ -32,13 +30,10 @@ def register_exception_handlers(app: FastAPI):
         exc: Exception,
     ):
 
-        # Always log the full error server-side.
+
         logger.exception(f"Unhandled error on {request.method} {request.url.path}: {exc}")
 
-        # Only leak the raw exception message to the client in DEBUG mode.
-        # In production, exposing exception internals to callers is an
-        # information-disclosure risk (stack traces, file paths, library
-        # versions, sometimes fragments of query data).
+    
         detail = str(exc) if settings.DEBUG else "An unexpected error occurred."
 
         return JSONResponse(

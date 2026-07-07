@@ -2,7 +2,7 @@ import requests
 import streamlit as st
 
 BACKEND_URL = "http://127.0.0.1:8000"
-REQUEST_TIMEOUT_UPLOAD = 120  # seconds - PDF processing + embedding can take a while
+REQUEST_TIMEOUT_UPLOAD = 120  
 REQUEST_TIMEOUT_ASK = 60
 
 st.set_page_config(
@@ -15,11 +15,6 @@ st.title("🤖 OmniMind AI")
 st.caption("Advanced Multi-Agent Hybrid RAG System")
 
 st.divider()
-
-
-# ==========================================
-# Section 1 - Upload
-# ==========================================
 
 st.header("1. Upload Documents")
 
@@ -35,9 +30,6 @@ upload_clicked = st.button("Upload PDFs", type="primary", disabled=not uploaded_
 
 if upload_clicked:
 
-    # Field name must be "files" (repeated) to match the backend's
-    # `files: List[UploadFile] = File(...)` parameter. Sending unique
-    # field names per file (e.g. "file1", "file2") does not bind correctly.
     files_data = [
         ("files", (file.name, file.getvalue(), "application/pdf"))
         for file in uploaded_files
@@ -89,9 +81,6 @@ if upload_clicked:
 st.divider()
 
 
-# ==========================================
-# Section 2 - Ask
-# ==========================================
 
 st.header("2. Ask a Question")
 

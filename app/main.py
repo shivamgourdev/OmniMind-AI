@@ -20,9 +20,7 @@ app = FastAPI(
 
 register_exception_handlers(app)
 
-# ==========================
-# Middleware
-# ==========================
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,9 +32,7 @@ app.add_middleware(
 
 app.add_middleware(LoggingMiddleware)
 
-# ==========================
-# Routers
-# ==========================
+
 
 app.include_router(upload_router)
 
@@ -44,9 +40,7 @@ app.include_router(ask_router)
 
 app.include_router(health_router)
 
-# ==========================
-# Startup Event
-# ==========================
+
 
 @app.on_event("startup")
 async def startup():
@@ -56,9 +50,7 @@ async def startup():
     logger.info(f"Version : {settings.APP_VERSION}")
     logger.info("=" * 60)
 
-# ==========================
-# Home
-# ==========================
+
 
 @app.get("/", tags=["Home"])
 def home():

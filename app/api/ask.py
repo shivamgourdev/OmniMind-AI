@@ -12,9 +12,6 @@ from app.services.generator import generate_answer
 router = APIRouter()
 
 
-# ==========================================
-# Schemas
-# ==========================================
 
 class AskRequest(BaseModel):
     question: str = Field(..., min_length=1)
@@ -29,15 +26,7 @@ class AskResponse(BaseModel):
     sources: list[str]
 
 
-# ==========================================
-# Filename extraction
-# ==========================================
-# Matches a single whitespace-delimited token ending in .pdf, e.g. picks
-# "ShivamGour.pdf" and "JD.pdf" out of "Compare ShivamGour.pdf and JD.pdf"
-# or "Compare ShivamGour.pdf, JD.pdf" regardless of the connecting word or
-# punctuation. This intentionally does NOT try to capture filenames that
-# contain literal spaces, since that made the previous regex swallow
-# leading words ("Summarize ShivamGour.pdf" -> whole phrase).
+
 _FILENAME_TOKEN_RE = re.compile(r'([^\s,;:]+\.pdf)', re.IGNORECASE)
 
 
@@ -49,8 +38,6 @@ def extract_filenames(question: str) -> list[str]:
     seen = set()
 
     for match in raw_matches:
-        # Strip any stray leading/trailing punctuation the token regex
-        # might have picked up (quotes, parens, etc.).
         name = match.strip(" \t\"'()[]{}")
 
         key = name.lower()
@@ -62,9 +49,6 @@ def extract_filenames(question: str) -> list[str]:
     return cleaned
 
 
-# ==========================================
-# Route
-# ==========================================
 
 @router.post(
     "/ask",
@@ -92,9 +76,7 @@ def ask_question(request: AskRequest):
     ]
 
     if requested_files and len(missing_files) == len(requested_files):
-        # Every file the user named is unknown to the store - tell them
-        # plainly instead of silently falling back to a full-collection
-        # search (which previously caused unrelated PDFs to leak in).
+    
         logger.info(f"None of the requested files exist: {requested_files}")
 
         return {
@@ -144,10 +126,6 @@ def ask_question(request: AskRequest):
         multi_document=len(requested_files) > 1
     )
 
-    # ---------- Attribution ----------
-    # Sources are simply the (filename, page) pairs of the chunks that were
-    # actually placed in the LLM's context window - no heuristic guessing
-    # about which words "overlap" with the generated answer.
 
     searched_files = []
     seen_files = set()

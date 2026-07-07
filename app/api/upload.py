@@ -15,7 +15,7 @@ router = APIRouter()
 
 class UploadedFileResult(BaseModel):
     filename: str
-    status: str  # "success" | "skipped" | "failed"
+    status: str  
     chunks: int = 0
     reason: str | None = None
 
@@ -110,9 +110,7 @@ async def upload_files(files: List[UploadFile] = File(...)):
             continue
 
         try:
-            # Replace only this file's existing chunks (if any) rather than
-            # wiping the entire collection - re-uploading "A.pdf" no longer
-            # deletes every other document that's already been indexed.
+        
             removed = delete_by_filename(file.filename)
 
             if removed:

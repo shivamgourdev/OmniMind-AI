@@ -9,9 +9,6 @@ from app.core.config import settings
 from app.core.logger import logger
 
 
-# ==========================================
-# ChromaDB
-# ==========================================
 
 client = chromadb.PersistentClient(
     path=settings.CHROMA_DB_PATH
@@ -21,9 +18,7 @@ collection = client.get_or_create_collection(
     name="documents"
 )
 
-# ==========================================
-# Load Existing Chunks
-# ==========================================
+
 
 existing_data = collection.get(
     include=[
@@ -47,7 +42,6 @@ ids = existing_data.get(
     []
 )
 
-# id -> chunk record, so we can add/remove without rescanning the whole list.
 all_chunks_by_id: dict[str, dict] = {}
 
 for chunk_id, document, metadata in zip(ids, documents, metadatas):
@@ -63,9 +57,6 @@ logger.info(
     f"Loaded {len(all_chunks_by_id)} chunks from ChromaDB."
 )
 
-# ==========================================
-# BM25
-# ==========================================
 
 bm25 = None
 bm25_ids: list[str] = []
@@ -96,17 +87,12 @@ def rebuild_bm25():
 
 rebuild_bm25()
 
-# ==========================================
-# Cross Encoder
-# ==========================================
+
 
 reranker = CrossEncoder(
     settings.CROSS_ENCODER_MODEL
 )
 
-# ==========================================
-# Helpers
-# ==========================================
 
 
 def generate_chunk_id(filename, page_number, chunk):
@@ -125,9 +111,6 @@ def normalize_filename(filename: str) -> str:
     return os.path.basename(filename).strip().lower()
 
 
-# ==========================================
-# Add To Vector Store
-# ==========================================
 
 def add_to_vector_store(embedding, chunk, filename, page_number):
     """
@@ -173,10 +156,6 @@ def add_to_vector_store(embedding, chunk, filename, page_number):
         raise
 
 
-# ==========================================
-# Delete a single file's chunks (used to replace a file on re-upload,
-# instead of wiping the entire collection).
-# ==========================================
 
 def delete_by_filename(filename: str) -> int:
 
@@ -212,9 +191,7 @@ def delete_by_filename(filename: str) -> int:
         raise
 
 
-# ==========================================
-# Hybrid Search (file-aware, multi-file capable)
-# ==========================================
+
 
 def search_vector(query_embedding, question, filenames: list[str] | None = None):
     """
@@ -235,9 +212,7 @@ def search_vector(query_embedding, question, filenames: list[str] | None = None)
             else None
         )
 
-        # ---------- Build a Chroma `where` filter up front when possible ----------
-        # This narrows the ANN search itself, not just the results, which
-        # matters once the collection holds many documents.
+    
         where_filter = None
 
         if normalized_targets:
@@ -250,7 +225,7 @@ def search_vector(query_embedding, question, filenames: list[str] | None = None)
             if exact_stored_names:
                 where_filter = {"filename": {"$in": exact_stored_names}}
 
-        # ---------- Vector Search ----------
+        
 
         vector_results = collection.query(
             query_embeddings=[query_embedding],
@@ -282,7 +257,7 @@ def search_vector(query_embedding, question, filenames: list[str] | None = None)
                 "page_number": metadata["page_number"]
             })
 
-        # ---------- BM25 (scoped to the same candidate pool as the filter) ----------
+    
 
         if bm25 is not None:
 
@@ -316,10 +291,6 @@ def search_vector(query_embedding, question, filenames: list[str] | None = None)
                 retrieved_chunks.append(item)
                 added += 1
 
-        # ---------- Belt-and-braces filename filter ----------
-        # Even with the `where` filter above, keep an explicit post-filter:
-        # it's what actually guarantees no cross-document leakage, and it's
-        # what makes partial/case-insensitive matches behave predictably.
 
         if normalized_targets:
 
@@ -334,7 +305,7 @@ def search_vector(query_embedding, question, filenames: list[str] | None = None)
 
             return []
 
-        # ---------- Cross Encoder ----------
+        
 
         pairs = [
             (question, item["chunk"])
@@ -359,11 +330,7 @@ def search_vector(query_embedding, question, filenames: list[str] | None = None)
         return []
 
 
-# ==========================================
-# Clear Vector Store (full wipe — kept for admin/reset use, no longer
-# called automatically on every upload; see delete_by_filename for the
-# per-file replacement used by the upload endpoint)
-# ==========================================
+
 
 def clear_vector_store():
 
@@ -387,9 +354,6 @@ def clear_vector_store():
         raise
 
 
-# ==========================================
-# Utility Functions
-# ==========================================
 
 def get_total_chunks():
     return len(all_chunks_by_id)
