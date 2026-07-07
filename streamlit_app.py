@@ -1,7 +1,12 @@
 import requests
 import streamlit as st
+import os
+import os
 
-BACKEND_URL = "http://127.0.0.1:8000"
+BACKEND_URL = os.getenv(
+    "BACKEND_URL",
+    "http://127.0.0.1:8000"
+)
 REQUEST_TIMEOUT_UPLOAD = 120  
 REQUEST_TIMEOUT_ASK = 60
 
